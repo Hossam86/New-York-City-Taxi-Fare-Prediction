@@ -54,14 +54,53 @@ print(f'New size: {len(df_raw)}')
 # =================================================
 
 # create two new features representing the latitude and longitude vectors traversed during the trip
+
+
 def add_travel_vector_features(df):
-    df['abs_diff_longitude'] = (df.dropoff_longitude - df.pickup_longitude).abs()
+    df['abs_diff_longitude'] = (
+        df.dropoff_longitude - df.pickup_longitude).abs()
     df['abs_diff_latitude'] = (df.dropoff_latitude - df.pickup_latitude).abs()
+
 
 add_travel_vector_features(df_raw)
 
 # distance – in units of degrees – travelled during each trip
+
+
 def add_distance_feature(df):
-    df['distance'] = np.sqrt(df.abs_diff_longitude**2 + df.abs_diff_latitude**2)
-    
+    df['distance'] = np.sqrt(df.abs_diff_longitude **
+                             2 + df.abs_diff_latitude**2)
+
+
 add_distance_feature(df_raw)
+
+plot = df_raw.iloc[:2000].plot.scatter(
+    'abs_diff_longitude', 'abs_diff_latitude', alpha=0.5, s=7)
+
+plt.show()
+
+''' Let's take a quick look at the distribution for both distance travelled and taxi fare within a limited range.
+ These limits will help us better see the shape of the distribution.'''
+short_rides = df_raw[(df_raw['abs_diff_latitude'] < 0.1)
+                     & (df_raw['abs_diff_longitude'] < 0.1)]
+
+# Kernel Density Plot for distance travelled
+fig = plt.figure(figsize=(15, 4),)
+ax = sns.kdeplot(short_rides.distance, color='steelblue',
+                 shade=True, label='distance')
+plt.title('Taxi Ride Distance Distribution')
+plt.show()
+
+'''The distance travelled follows a positive skewed normal distribution, with the max frequency at less than 0.02 degrees (about 1.4 miles).
+ This makes intuitive sense. We'd expect most rides in NYC to be short, likely within Manhattan, with a few longer rides.'''
+
+cheap_rides = df_raw[df_raw.fare_amount < 50]
+
+# Kernel Density Plot for taxi fare
+fig = plt.figure(figsize=(15,4),)
+ax=sns.kdeplot(cheap_rides.fare_amount , color='red',shade=True,label='fare_amount')
+plt.title('Taxi Ride Fare')
+plt.show()
+
+print("Correlation between taxi fare and distance travelled: " +
+      f"{df_raw['fare_amount'].corr(df_raw['distance'])}")
