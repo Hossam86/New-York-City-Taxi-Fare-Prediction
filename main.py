@@ -104,3 +104,30 @@ plt.show()
 
 print("Correlation between taxi fare and distance travelled: " +
       f"{df_raw['fare_amount'].corr(df_raw['distance'])}")
+
+# Random Forests
+# Quick Baseline Model
+# =======================================================================
+X_train = df_raw.drop(['key', 'pickup_datetime', 'fare_amount'], axis=1)
+y_train = df_raw.fare_amount
+
+
+def split_vals(df, n): return df[:n].copy(), df[n:].copy()
+
+n_valid = 9914  # same as Kaggle's test set size
+n_trn = len(X_train)-n_valid
+raw_train, raw_valid = split_vals(df_raw, n_trn)
+X_train, X_valid = split_vals(X_train, n_trn)
+y_train, y_valid = split_vals(y_train, n_trn)
+
+m = RandomForestRegressor()
+m.fit(X_train, y_train)
+m.score(X_train, y_train)
+
+def rmse(x,y): return math.sqrt(((x-y)**2).mean())
+
+def print_score(m):
+    res = [rmse(m.predict(X_train), y_train), rmse(m.predict(X_valid), y_valid),
+                m.score(X_train, y_train), m.score(X_valid, y_valid)]
+    if hasattr(m, 'oob_score_'): res.append(m.oob_score_)
+    print(res)
